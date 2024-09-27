@@ -1,1 +1,45 @@
-test
+Acme.sh modification for Netscaler ADC
+
+A simple way of adepting acme.sh to Netscaler with minimal modification to the original acme.sh.
+
+Prepare the Netscaler by running the follwing:
+# Create a user with password
+add system user acme-user acme-user
+# Create a Commandpolicy to allow change of the Acme responder policy and Add/update Certificate
+add system cmdPolicy acme-user ALLOW "(^set\\s+responder\\s+action\\s+acme_responder\\s.*)||(^add\\s+ssl\\s+certkey\\s+.*) || (^update\\s+ssl\\s+certkey\\s+.*)"
+# Bind the command policy
+bind system user acme-user acme-user 100
+# Allow Read Only
+bind system user acme-user read-only 110
+# Create a responder action
+add responder action acme_responder respondwith q{"acme"}
+# Create a responder policy
+add responder policy acme_responder "http.REQ.URL.STARTSWITH(\"/.well-known/acme-challenge\")" acme_responder
+# Bind it globally
+bind responder global acme_responder 100 END -type REQ_DEFAULT
+
+Download, install and Modify the Acme.sh 
+Out of lazyness I decided to hi-jack the nginx part in acme.sh. Find the _setNginx()  and replace with:
+_setNginx() {
+  _d="$1"
+  _croot="$2"
+  _thumbpt="$3"
+
+  _debug _croot "$_croot"
+  _start_f="$(echo "$_croot" | cut -d : -f 2)"
+  _debug _start_f "$_start_f"
+
+  echo "Setting Responder Action"
+  nscli -U 127.0.0.1:acme-user:acme-user 'set responder action acme_responder -target "\"HTTP/1.1 200 OK\\r\\n\\r\\n'$token.$_thumbpt'\""'
+
+  return 0
+}
+
+Download the deployhook.sh file into your acme folder.
+
+Issue and install a cert:
+ ./acme.sh --issue -d www.yourdomain.com --nginx --cert-file /nsconfig/ssl/www.yourdomain.com.crt --key-file /nsconfig/ssl/www.yourdomain.com.key --post-hook '/root/.acme.sh/deployhook.sh www.yourdomain.com'
+
+If everything is working, the certificate will show up in the Netscaler.
+
+
