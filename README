@@ -1,4 +1,4 @@
-Acme.sh modification for Netscaler ADC
+scaAcme.sh modification for Netscaler ADC
 
 A simple way of adepting acme.sh to Netscaler with minimal modification to the original acme.sh.
 
@@ -35,11 +35,15 @@ _setNginx() {
   return 0
 }
 
-Download the deployhook.sh file into your acme folder.
+Download the netscaler.sh file into your acme deploy folder.
 
 Issue and install a cert:
- ./acme.sh --issue -d www.yourdomain.com --nginx --cert-file /nsconfig/ssl/www.yourdomain.com.crt --key-file /nsconfig/ssl/www.yourdomain.com.key --post-hook '/root/.acme.sh/deployhook.sh www.yourdomain.com'
+ ./acme.sh --issue -d www.yourdomain.com --nginx --cert-file /nsconfig/ssl/www.yourdomain.com.crt --key-file /nsconfig/ssl/www.yourdomain.com.key --deploy --deploy-hook netscaler
 
 If everything is working, the certificate will show up in the Netscaler.
+
+There are things to make nicer. For example:
+  * use a persistant directory
+  * use a "cert home" in acme config
 
 
