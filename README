@@ -1,4 +1,4 @@
-scaAcme.sh modification for Netscaler ADC
+Acme.sh modification for Netscaler ADC
 
 A simple way of adepting acme.sh to Netscaler with minimal modification to the original acme.sh.
 
